@@ -1,0 +1,38 @@
+(defun mat (lista ponteiro)
+	(if (eql ponteiro NIL)
+		lista
+		(cons (car ponteiro (mat lista (cdr ponteiro))))))
+
+(defun matricular (alunos disciplinas bd)
+	(if (eql (car bd) NIL)
+		bd
+		(if (not (eql (car disciplinas) NIL))
+			(if (eql (car disciplinas) (caar bd))
+				(cons  (cadar bd) (mat alunos (cadar bd)))
+				(if (eql 0 (matricular alunos (cdr disciplinas) bd))
+					(matricular alunos diciplinas (cdr bd))
+					1
+				)
+			)
+			0
+		)		
+	)
+)	
+(defun matricular-teachers (professores disciplinas bd)
+	(if (eql (car bd) NIL)
+		bd
+		(if (not (eql (car disciplinas) NIL))
+			(if (eql (car disciplinas) (caar bd))
+				(cons  (caddr bd) (mat professores (caddr bd)))
+				(if (eql 0 (matricular-teachers professores (cdr disciplinas) bd))
+					(matricular-teachers professores diciplinas (cdr bd))
+					1
+				)
+			)
+			0
+		)		
+	)
+)	
+
+
+	
