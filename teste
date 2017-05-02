@@ -1,0 +1,17 @@
+(defun matricular (alunos disciplinas bd)
+	(if (null bd)
+		(if (null disciplinas)
+			NIL
+			(cons(cons(cons(cons(cons (cdr alunos) 
+			(car alunos)) NIL) (car disciplinas))) 
+			(matricular alunos (cdr disciplinas) bd))
+		)
+		(matricular_existe alunos disciplinas bd)	
+	)
+)	
+
+(defun matricular_existe (alunos disciplinas bd)
+	(if (null disciplinas)
+		NIL
+		(if (eql (cdar bd) (car disciplinas))
+			
