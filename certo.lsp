@@ -3,18 +3,20 @@
 	(if (null bd)
 		(if (null disciplinas)
 			NIL
-			(cons(cons (car disciplinas) (cons
-			(cons (car alunos) (cdr alunos)) NIL)) 
-			(matricular alunos (cdr disciplinas) bd)) 
+			(cons(cons (car disciplinas) (cons (cons (car alunos) (cdr alunos)) NIL)) (matricular alunos (cdr disciplinas) bd)) 
 		)
-		(matricular_existe alunos disciplinas bd)	
+		(matriculando alunos disciplinas bd)	
 	)
 )	
 (defun matriculando (alunos diciplinas bd)
-	(matricula ex
+	(if (null diciplinas)
+		nil
+		(matricular_existe alunos (car diciplinas) bd)
+	)
+
 ;SE O BD JÁ ESXISTE
 (defun matricular_existe (alunos disciplinas bd)
-	(if (verifica_disciplinas disciplinas bd)
+	(if (equal (car disciplinas) (caar bd))
 		(matricular_existe2  alunos disciplinas bd)
 		(cons bd (cons (car disciplinas) 
 		(cons(cons (car alunos) (cdr alunos)) NIL)))
@@ -29,7 +31,7 @@
 
 ;FUNÇÃO QUE VERIFICA SE A DISCIPLINA JÁ EXISTE NO BD
 (defun verifica_disciplinas (disciplinas bd)
-	(if (eql (car disciplinas) (caar bd)) 
+	
 		1
 		NIL
 	)
