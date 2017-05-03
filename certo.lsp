@@ -1,43 +1,174 @@
+;==========================================================================="MAIN"==========================
+
+;FUNCAO QUE VERIFICA SE EXISTE A DISCIPLINA EXISTE E RETORNA A POSICAO
+(defun pertence (disciplina bd)
+	(if (null bd)
+		nil
+		(if (equal (caar bd) disciplina)
+			0
+			(+ 1 (pertence disciplina (cdr bd)))
+		)
+	)
+)
+;devolve a lista com os novos elementos nao respetidos
+(defun novaLista (lista elementos)
+	(if (null elementos)
+		lista
+		(if (EXISTE (car elementos) lista)
+			(novaLista (cdr elementos) lista)
+			(novaLista (cdr elementos) (cons (car elementos) lista))
+		)
+	)
+)
+;FUNCAO QUE INSERE ALUNOS A DISCIPLINA
+(defun insereEm (dist alunos bd)
+	(if (eql dist 0)
+		(cons (cons (caar bd) (cons (novaLista alunos (cadar bd)) (caddr bd))) (cdr bd))
+		(cons (car bd) (insereEm (1- dist) alunos (cdr bd)))
+	)
+)
+;FUNCAO AUXILIAR PARA INSERCAO
+(defun matriculando (alunos disciplinas bd)
+	(if (null disciplinas)
+		bd
+		(if (pertence (car disciplinas) bd)
+			(matriculando alunos (cdr disciplinas) (insereEm (pertence (car disciplinas) bd) alunos bd));insere em uma disciplina que ja existe
+			(matriculando alunos (cdr disciplinas) (insereEm (criaDisciplina (car disciplinas) bd) alunos bd));cria disciplina e insere alunos nela
+		)
+	)
+)
+
 ;FUNÇÃO QUE MATRICULA ALUNOS EM DISCILINAS
 (defun matricular (alunos disciplinas bd)
 	(if (null bd)
 		(if (null disciplinas)
 			NIL
-			(cons(cons (car disciplinas) (cons (cons (car alunos) (cdr alunos)) NIL)) (matricular alunos (cdr disciplinas) bd)) 
+			(cons(cons (car disciplinas) (cons alunos NIL))
+			(matricular alunos (cdr disciplinas) bd))
 		)
-		(matriculando alunos disciplinas bd)	
+		(if (null disciplinas)
+			bd
+			(matriculando alunos disciplinas bd)
+		)
 	)
-)	
-(defun matriculando (alunos diciplinas bd)
-	(if (null diciplinas)
+)
+
+;===========================================================   LISTAGENS   ==============================
+(DEFUN EXISTE (item lista)
+	(if (equal nil (car lista))
 		nil
-		(matricular_existe alunos (car diciplinas) bd)
-	)
-
-;SE O BD JÁ ESXISTE
-(defun matricular_existe (alunos disciplinas bd)
-	(if (equal (car disciplinas) (caar bd))
-		(matricular_existe2  alunos disciplinas bd)
-		(cons bd (cons (car disciplinas) 
-		(cons(cons (car alunos) (cdr alunos)) NIL)))
+		(if (equal item (car lista))
+			t
+			(existe item (cdr lista))
+		)
 	)
 )
-
-;SE DISCIPLINA JÁ EXISTE
-(defun matricular_existe2 (alunos disciplinas bd)
-	(cons (car bd) ())
-)
-
-
-;FUNÇÃO QUE VERIFICA SE A DISCIPLINA JÁ EXISTE NO BD
-(defun verifica_disciplinas (disciplinas bd)
-	
-		1
+;________________________________________________________________________________________________________
+(DEFUN LISTAR (lista)
+;Argumentos: lista
+;descricao: Listar todos elementos da lista dada
+;retorna: todos elementos da lista
+	(if (equal (car lista) nil)
 		NIL
+		(if (existe (car lista) (cdr lista))
+			(listar (cdr lista))
+			(cont (car lista) (lista (cdr lista)))
+		)
 	)
 )
-
-
-
-
-(SETQ BD1 (MATRICULAR '("João Paulo" "Ana Maria") '("APC" "Cálculo I")  BD1 ))
+;________________________________________________________________________________________________________
+(DEFUN encontraDic (lista diciplina)
+	(if (equal nil lista)
+		nil
+		(if (equal (caar lista) diciplina)
+	 		lista
+			(encontraDic (cdr lista) diciplina)
+		)
+	)
+)
+;________________________________________________________________________________________________________
+(DEFUN achaAluno (alunos lista)
+	(if (equal lista nil)
+		nil
+		(if (EXISTE (alunos (cadar lista)))
+			(cons (caar lista) (achaAluno alunos (cdr lista)))
+			(achaAluno alunos (cdr lista))
+		)
+	)
+)
+;________________________________________________________________________________________________________
+(DEFUN achaprofessor (professor lista)
+	(if (equal lista nil)
+		nil
+		(if (EXISTE (professor (cddar lista)))
+			(cons (caar lista) (achaprofessor professor (cdr lista)))
+			(achaprofessor professor (cdr lista))
+		)
+	)
+)
+;________________________________________________________________________________________________________
+(DEFUN listaDic (controle)
+	(if (equal (car controle) nil)
+		nil
+		(cons (caar controle) (listaDic (cdr controle)))
+	)
+)
+;________________________________________________________________________________________________________
+(DEFUN ALUNOS? (BD)
+; Argumentos: .
+; Retorna:         Lista contendo o nome de todos os alunos cadastrados.
+; Observação:  Um aluno é cadastrado quando é matriculado em alguma disciplina. Alunos não vinculados a nenhuma disciplina devem ser removidos da base.
+	(listar (todosAlunos BD))
+)
+(DEFUN todosAlunos (bd)
+	(if (null bd)
+		nil
+		(cons (cadar bd) (todosAlunos (cdr bd)))
+	)
+)
+;________________________________________________________________________________________________________
+(DEFUN PROFESSORES? (BD)
+; Argumentos: .
+; Retorna:         Lista contendo o nome de todos os professores cadastrados.
+; Observação:  Um professor é cadastrado quando é vinculado a alguma disciplina. Professores não vinculados a nenhuma disciplina devem ser removidos da base.
+	(listar (todosProfessores BD))
+)
+(DEFUN todosProfessores (bd)
+	(if (null bd)
+		nil
+		(cons (cddar bd) (todosProfessores (cdr bd)))
+	)
+)
+;________________________________________________________________________________________________________
+(DEFUN DISCIPLINAS? (controle)
+	(if (equal (car controle) nil)
+		nil
+		(cons (caar controle) (listaDic (cdr controle)))
+	)
+)
+;________________________________________________________________________________________________________
+(DEFUN MATRICULADOS? (DISCIPLINA BD)
+; Argumentos: .
+; Retorna:         Lista contendo o nome de todos os alunos matriculados na disciplina DISIPLINA.
+	(listar (cadar (encontraDic bd diciplina)))
+)
+;________________________________________________________________________________________________________
+(DEFUN VINCULADOS? (DISCIPLINA BD)
+; ; Argumentos: .
+; ; Retorna:         Lista contendo o nome de todos os professores vinculados à disciplina DISCIPLINA.
+	(listar (cddar (encontraDic bd diciplina)))
+)
+;________________________________________________________________________________________________________
+(DEFUN CURSA? (alunos BD)
+; ; Argumentos: .
+; ; Retorna:         Lista contendo o nome de todas as disciplinas cursadas pelo aluno ALUNO.
+	(achaAluno alunos bd)
+)
+;________________________________________________________________________________________________________
+(DEFUN MINISTRA? (PROFESSOR BD)
+; ; Argumentos: .
+; ; Retorna:         Lista contendo o nome de todas as disciplinas ministradas pelo professor PROFESSOR.
+	(achaprofessor professor bd)
+)
+;=======================================  TESTES  ===============================================
+;(SETQ BD1 (MATRICULAR '("João Paulo" "Ana Maria") '("APC" "Cálculo I")  BD1 ))
