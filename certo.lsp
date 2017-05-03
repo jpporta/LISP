@@ -1,61 +1,13 @@
-;==========================================================================="MAIN"==========================
-
-;FUNCAO QUE VERIFICA SE EXISTE A DISCIPLINA EXISTE E RETORNA A POSICAO
-(defun pertence (disciplina bd)
-	(if (null bd)
-		nil
-		(if (equal (caar bd) disciplina)
-			0
-			(+ 1 (pertence disciplina (cdr bd)))
-		)
+;define tamanho da lista
+(defun list-lenght (lista)
+	(if (null lista)
+		0
+		(1+ (list-lenght (cdr lista)))
 	)
 )
-;devolve a lista com os novos elementos nao respetidos
-(defun novaLista (lista elementos)
-	(if (null elementos)
-		lista
-		(if (EXISTE (car elementos) lista)
-			(novaLista (cdr elementos) lista)
-			(novaLista (cdr elementos) (cons (car elementos) lista))
-		)
-	)
-)
-;FUNCAO QUE INSERE ALUNOS A DISCIPLINA
-(defun insereEm (dist alunos bd)
-	(if (eql dist 0)
-		(cons (cons (caar bd) (cons (novaLista alunos (cadar bd)) (caddr bd))) (cdr bd))
-		(cons (car bd) (insereEm (1- dist) alunos (cdr bd)))
-	)
-)
-;FUNCAO AUXILIAR PARA INSERCAO
-(defun matriculando (alunos disciplinas bd)
-	(if (null disciplinas)
-		bd
-		(if (pertence (car disciplinas) bd)
-			(matriculando alunos (cdr disciplinas) (insereEm (pertence (car disciplinas) bd) alunos bd));insere em uma disciplina que ja existe
-			(matriculando alunos (cdr disciplinas) (insereEm (criaDisciplina (car disciplinas) bd) alunos bd));cria disciplina e insere alunos nela
-		)
-	)
-)
-
-;FUNÇÃO QUE MATRICULA ALUNOS EM DISCILINAS
-(defun matricular (alunos disciplinas bd)
-	(if (null bd)
-		(if (null disciplinas)
-			NIL
-			(cons(cons (car disciplinas) (cons alunos NIL))
-			(matricular alunos (cdr disciplinas) bd))
-		)
-		(if (null disciplinas)
-			bd
-			(matriculando alunos disciplinas bd)
-		)
-	)
-)
-
 ;===========================================================   LISTAGENS   ==============================
 (DEFUN EXISTE (item lista)
-	(if (equal nil (car lista))
+	(if (null lista)
 		nil
 		(if (equal item (car lista))
 			t
@@ -170,5 +122,100 @@
 ; ; Retorna:         Lista contendo o nome de todas as disciplinas ministradas pelo professor PROFESSOR.
 	(achaprofessor professor bd)
 )
-;=======================================  TESTES  ===============================================
-;(SETQ BD1 (MATRICULAR '("João Paulo" "Ana Maria") '("APC" "Cálculo I")  BD1 ))
+
+
+;==========================================================================="MAIN"==========================
+
+;FUNCAO QUE VERIFICA SE EXISTE A DISCIPLINA EXISTE E RETORNA A POSICAO
+(defun pertence (disciplina bd)
+	(if (null bd)
+		nil
+		(if (equal (caar bd) disciplina)
+			0
+			(if (null (pertence disciplina (cdr bd)))
+				nil
+				(+ 1 (pertence disciplina (cdr bd)))
+			)
+		)
+	)
+)
+;devolve a lista com os novos elementos nao respetidos
+(defun novaLista (lista elementos)
+	(if (null elementos)
+		lista
+		(if (OR (eql nil (car elementos)) (EXISTE (car elementos) lista))
+			(novaLista lista (cdr elementos))
+			(novaLista (cons (car elementos) lista) (cdr elementos))
+		)
+	)
+)
+;FUNCAO QUE INSERE ALUNOS A DISCIPLINA
+(defun insereEm (dist alunos bd)
+	(if (equal dist 0)
+		(cons (cons (caar bd) (cons (novaLista alunos (cadar bd)) (cddar bd))) (cdr bd))
+		(cons (car bd) (insereEm (1- dist) alunos (cdr bd)))
+	)
+)
+;FUNCAO CRIA DISCIPLINA E RETORNA O BD ATUALIZADO
+(defun criaDisciplina (disciplina bd)
+	(if (null bd)
+		(cons (cons disciplina nil) nil)
+		(cons (car bd) (criaDisciplina disciplina (cdr bd)))
+	)
+)
+;FUNCAO AUXILIAR PARA INSERCAO
+(defun matriculando (alunos disciplinas bd)
+	(if (null disciplinas)
+		bd
+		(if (pertence (car disciplinas) bd)
+			(matriculando alunos (cdr disciplinas) (insereEm (pertence (car disciplinas) bd) alunos bd));insere em uma disciplina que ja existe
+			(matriculando alunos (cdr disciplinas) (insereEm (list-lenght bd) alunos (criaDisciplina (car disciplinas) bd)));cria disciplina e insere alunos nela
+		)
+	)
+)
+
+;FUNÇÃO QUE MATRICULA ALUNOS EM DISCILINAS
+(defun matricular (alunos disciplinas bd)
+	(if (null bd)
+		(if (null disciplinas)
+			NIL
+			(cons(cons (car disciplinas) (cons alunos NIL))
+			(matricular alunos (cdr disciplinas) bd))
+		)
+		(if (null disciplinas)
+			bd
+			(matriculando alunos disciplinas bd)
+		)
+	)
+)
+;=====================================================  PROFESSORES  ===========================================
+(defun insereProfEm (dist professores bd)
+	(if (equal dist 0)
+		(cons (cons (caar bd) (cons (cadar bd) (novaLista (caddr bd) professores))) (cdr bd))
+		(cons (car bd) (insereProfEm (1- dist) professores (cdr bd)))
+	)
+)
+;FUNCAO AUXILIAR PARA vincular
+(defun vinculando (professores disciplinas bd)
+	(if (null disciplinas)
+		bd
+		(if (pertence (car disciplinas) bd)
+			(vinculando professores (cdr disciplinas) (insereProfEm (pertence (car disciplinas) bd) professores bd));insere em uma disciplina que ja existe
+			(vinculando professores (cdr disciplinas) (insereProfEm (list-lenght bd) professores (criaDisciplina (car disciplinas) bd)));cria disciplina e insere professores nela
+		)
+	)
+)
+;FUNÇÃO QUE VINCULA PROFESSOR EM DISCILINAS
+(defun vincular (professores disciplinas bd)
+	(if (null bd)
+		(if (null disciplinas)
+			NIL
+			(cons(cons (car disciplinas) professores)
+			(vincular professores (cdr disciplinas) bd))
+		)
+		(if (null disciplinas)
+			bd
+			(vinculando professores disciplinas bd)
+		)
+	)
+)
