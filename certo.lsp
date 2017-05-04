@@ -5,6 +5,10 @@
 		(1+ (list-lenght (cdr lista)))
 	)
 )
+(defun achata (lista)
+  (cond ((null lista) nil)
+        ((atom lista) (list lista))
+        (t (mapcan #'flatten lista))))
 ;===========================================================   LISTAGENS   ==============================
 (DEFUN EXISTE (item lista)
 	(if (null lista)
@@ -24,7 +28,7 @@
 		NIL
 		(if (existe (car lista) (cdr lista))
 			(listar (cdr lista))
-			(cont (car lista) (lista (cdr lista)))
+			(cons (car lista) (listar (cdr lista)))
 		)
 	)
 )
@@ -49,15 +53,6 @@
 	)
 )
 ;________________________________________________________________________________________________________
-(DEFUN achaprofessor (professor lista)
-	(if (equal lista nil)
-		nil
-		(if (EXISTE (professor (cddar lista)))
-			(cons (caar lista) (achaprofessor professor (cdr lista)))
-			(achaprofessor professor (cdr lista))
-		)
-	)
-)
 ;________________________________________________________________________________________________________
 (DEFUN listaDic (controle)
 	(if (equal (car controle) nil)
@@ -66,24 +61,25 @@
 	)
 )
 ;________________________________________________________________________________________________________
-(DEFUN ALUNOS? (BD)
-; Argumentos: .
-; Retorna:         Lista contendo o nome de todos os alunos cadastrados.
-; Observação:  Um aluno é cadastrado quando é matriculado em alguma disciplina. Alunos não vinculados a nenhuma disciplina devem ser removidos da base.
-	(listar (todosAlunos BD))
-)
 (DEFUN todosAlunos (bd)
 	(if (null bd)
 		nil
 		(cons (cadar bd) (todosAlunos (cdr bd)))
 	)
 )
+(DEFUN ALUNOS? (BD)
+; Argumentos: .
+; Retorna:         Lista contendo o nome de todos os alunos cadastrados.
+; Observação:  Um aluno é cadastrado quando é matriculado em alguma disciplina. Alunos não vinculados a nenhuma disciplina devem ser removidos da base.
+	(listar (achata (todosAlunos BD)))
+)
+
 ;________________________________________________________________________________________________________
 (DEFUN PROFESSORES? (BD)
 ; Argumentos: .
 ; Retorna:         Lista contendo o nome de todos os professores cadastrados.
 ; Observação:  Um professor é cadastrado quando é vinculado a alguma disciplina. Professores não vinculados a nenhuma disciplina devem ser removidos da base.
-	(listar (todosProfessores BD))
+	(listar (achata (todosProfessores BD)))
 )
 (DEFUN todosProfessores (bd)
 	(if (null bd)
@@ -93,7 +89,7 @@
 )
 ;________________________________________________________________________________________________________
 (DEFUN DISCIPLINAS? (controle)
-	(if (equal (car controle) nil)
+	(if (null controle)
 		nil
 		(cons (caar controle) (listaDic (cdr controle)))
 	)
@@ -102,25 +98,37 @@
 (DEFUN MATRICULADOS? (DISCIPLINA BD)
 ; Argumentos: .
 ; Retorna:         Lista contendo o nome de todos os alunos matriculados na disciplina DISIPLINA.
-	(listar (cadar (encontraDic bd diciplina)))
+	(listar (cadar (encontraDic bd DISCIPLINA)))
 )
 ;________________________________________________________________________________________________________
 (DEFUN VINCULADOS? (DISCIPLINA BD)
 ; ; Argumentos: .
 ; ; Retorna:         Lista contendo o nome de todos os professores vinculados à disciplina DISCIPLINA.
-	(listar (cddar (encontraDic bd diciplina)))
+	(listar (cddar (encontraDic bd DISCIPLINA)))
 )
 ;________________________________________________________________________________________________________
-(DEFUN CURSA? (alunos BD)
+(DEFUN CURSA? (aluno BD)
 ; ; Argumentos: .
 ; ; Retorna:         Lista contendo o nome de todas as disciplinas cursadas pelo aluno ALUNO.
-	(achaAluno alunos bd)
+	(if (null bd)
+		nil
+		(if (EXISTE aluno (cadar bd))
+			(cons (caar bd) (cursa? aluno (cdr bd)))
+			(cursa? aluno (cdr bd))
+		)
+	)
 )
 ;________________________________________________________________________________________________________
 (DEFUN MINISTRA? (PROFESSOR BD)
 ; ; Argumentos: .
 ; ; Retorna:         Lista contendo o nome de todas as disciplinas ministradas pelo professor PROFESSOR.
-	(achaprofessor professor bd)
+	(if (null bd)
+		nil
+		(if (EXISTE professor (cddar bd))
+			(cons (caar bd) (ministra? professor (cdr bd)))
+			(ministra? professor (cdr bd))
+		)
+	)
 )
 
 
@@ -149,18 +157,19 @@
 		)
 	)
 )
-;FUNCAO QUE INSERE ALUNOS A DISCIPLINA
-(defun insereEm (dist alunos bd)
-	(if (equal dist 0)
-		(cons (cons (caar bd) (cons (novaLista alunos (cadar bd)) (cddar bd))) (cdr bd))
-		(cons (car bd) (insereEm (1- dist) alunos (cdr bd)))
-	)
-)
 ;FUNCAO CRIA DISCIPLINA E RETORNA O BD ATUALIZADO
 (defun criaDisciplina (disciplina bd)
 	(if (null bd)
 		(cons (cons disciplina nil) nil)
 		(cons (car bd) (criaDisciplina disciplina (cdr bd)))
+	)
+)
+;_______________________________________________________________________________________________________________
+;FUNCAO QUE INSERE ALUNOS A DISCIPLINA
+(defun insereEm (dist alunos bd)
+	(if (equal dist 0)
+		(cons (cons (caar bd) (cons (novaLista alunos (cadar bd)) (cddar bd))) (cdr bd))
+		(cons (car bd) (insereEm (1- dist) alunos (cdr bd)))
 	)
 )
 ;FUNCAO AUXILIAR PARA INSERCAO
@@ -188,10 +197,31 @@
 		)
 	)
 )
+;_______________________________________________________________________________________________________________
+(defun cancelar-matricula (alunos disciplinas bd)
+	(if (null (car alunos))
+		nil
+		(if (null (car disciplinas))
+			nil
+			(if (equal (car disciplinas) (caar bd))
+				(if (null (set-difference (cadar bd) alunos))
+					(cancelar-matricula alunos disciplinas (cdr bd))
+
+					(cons (cons (car disciplinas)
+					(cons (set-difference (cadar bd) alunos :test 'equal)
+					(caddr bd)))(cancelar-matricula (cdr alunos)
+					(cdr disciplinas) (cdr bd)))
+				)
+				(cons (car bd) (cancelar-matricula (cdr alunos) (cdr disciplinas) (cdr bd)));else
+			)
+		)
+	)
+)
+
 ;=====================================================  PROFESSORES  ===========================================
 (defun insereProfEm (dist professores bd)
 	(if (equal dist 0)
-		(cons (cons (caar bd) (cons (cadar bd) (novaLista (caddr bd) professores))) (cdr bd))
+		(cons (cons (caar bd) (cons (cadar bd) (novaLista (cddar bd) professores))) (cdr bd))
 		(cons (car bd) (insereProfEm (1- dist) professores (cdr bd)))
 	)
 )
